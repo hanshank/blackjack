@@ -2,7 +2,7 @@ const readline = require('readline');
 
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout
+  output: process.stdout,
 });
 
 class Player {
@@ -20,7 +20,7 @@ class Card {
 
 class Deck {
   constructor() {
-    this.suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+    this.suits = ['♥️', '♦️', '♣️', '♠️'];
     this.values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
     this.cards = [];
   }
@@ -36,16 +36,11 @@ class Deck {
 
   shuffle() {
     for (let i = 0; i < 10000; i++) {
-      const randomIndex= Math.floor(Math.random() * 52);
+      const randomIndex = Math.floor(Math.random() * 52);
       const randomCard = this.cards.splice(randomIndex, 1)[0];
       this.cards.push(randomCard);
     }
   }
-
-  // 52 cards
-  // 4 suits
-  // 13 values
-  // shuffle function
 }
 
 class Game {
@@ -74,36 +69,45 @@ class Game {
     this.dealCard(this.dealer);
     this.dealCard(this.player);
     this.dealCard(this.dealer);
-    
-    this.printHands();
 
     this.runTurn();
   }
 
   async runTurn() {
-    this.askToHit().then(res => {
-      if (res) {
-        this.dealCard(this.player);
-        this.printHands();
-      }
-    })
+    this.printHands();
+    this.isWin()
+      .then(win => {
+        console.log(win);
+      })
+      .catch(() => {
+        this.askToHit()
+          .then(res => {
+            if (res) {
+              this.dealCard(this.player);
+              this.runTurn();
+            } else {
+              this.runDealerTurn();
+            }
+          })
+          .catch(() => this.runDealerTurn());
+      });
+  }
+
+  runDealerTurn() {
+    return 'Dealer logic goes here';
   }
 
   askToHit(player, dealer) {
     return new Promise(function(resolve, reject) {
-      rl.question('Hit or stay? press h / s ', (answer) => {
+      rl.question('Hit or stay? press h / s ', answer => {
         if (answer === 'h') {
           resolve(true);
         } else {
           reject(false);
-        }    
+        }
         rl.close();
       });
     });
-
-
-
-    console.log('hit it!');
   }
 
   dealCard(dealTo) {
@@ -111,17 +115,17 @@ class Game {
   }
 
   printHands() {
-    console.log(`Player's hand:`);
-    console.log(this.player.hand.forEach(card => card.value));
-    console.log(`Dealer's hand: ${this.dealer.hand[0].value} - ${this.dealer.hand[1].value} \n \n`);
+    const playerHand = [];
+    const dealerHand = [];
+
+    this.player.hand.forEach(card => playerHand.push(card.value + card.suit));
+    this.dealer.hand.forEach(card => dealerHand.push(card.value + card.suit));
+
+    console.log(`Dealer's hand: ${dealerHand} \n \n`);
+    console.log(`Player's hand: ${playerHand} \n \n`);
   }
 
-  // printHands() {
-  //   console.log(`Player's hand: ${player.hand[0].value} - ${player.hand[1].value} \n`);
-  //   console.log(`Dealer's hand: ${dealer.hand[0].value} - ${dealer.hand[1].value} \n \n`);
-  // }
-
-  checkWinner(playerHand, dealerHand) {
+  isWin() {
     const lookup = {
       A: 11,
       K: 10,
@@ -138,25 +142,31 @@ class Game {
       '2': 2,
     };
 
-    let playerSum = 0;
-    let dealerSum = 0;
+    return new Promise((resolve, reject) => {
+      let playerSum = 0;
+      let dealerSum = 0;
 
-    // check if player hand is greater than or equal to dealer hand
-    playerHand.forEach(card => {
-      playerSum += lookup[card.value];
+      // check if player hand is greater than or equal to dealer hand
+      this.player.hand.forEach(card => {
+        playerSum += lookup[card.value];
+      });
+
+      this.dealer.hand.forEach(card => {
+        dealerSum += lookup[card.value];
+      });
+
+      if (playerSum > 21) {
+        resolve('Player busts!');
+      } else if (dealerSum > 21) {
+        resolve('Dealer busts!');
+      } else if (playerSum === 21 && dealerSum === 21) {
+        resolve("Double Jackpot! It's a draw...");
+      } else if (playerSum === 21 && dealerSum !== 21) {
+        resolve('Player Wins!');
+      } else {
+        reject();
+      }
     });
-
-    dealerHand.forEach(card => {
-      dealerSum += lookup[card.value];
-    });
-
-    if (playerSum > dealerSum && playerSum <= 21) {
-      console.log('Player Wins! \n \n');
-    } else if (dealerSum > playerSum && dealerSum <= 21) {
-      console.log('Dealer Wins! \n \n');
-    } else if (playerSum === dealerSum) {
-      console.log("It's a draw! \n \n");
-    }
   }
 }
 
