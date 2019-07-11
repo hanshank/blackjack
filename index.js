@@ -162,7 +162,9 @@ class Game {
       } else if (playerSum === 21 && dealerSum === 21) {
         resolve("Double Jackpot! It's a draw...");
       } else if (playerSum === 21 && dealerSum !== 21) {
-        resolve('Player Wins!');
+        resolve('Blackjack! Player Wins!');
+      } else if (dealerSum === 21 && playerSum !== 21) {
+        resolve('BLACKJACK! Dealer Wins!');
       } else {
         reject();
       }
