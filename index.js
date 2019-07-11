@@ -6,7 +6,7 @@ const rl = readline.createInterface({
 });
 
 class Player {
-  constructor(card) {
+  constructor() {
     this.hand = [];
   }
 }
@@ -73,7 +73,7 @@ class Game {
     this.runTurn();
   }
 
-  async runTurn() {
+  runTurn() {
     this.printHands();
     this.isWin()
       .then(win => {
@@ -82,30 +82,26 @@ class Game {
       .catch(() => {
         this.askToHit()
           .then(res => {
-            if (res) {
-              this.dealCard(this.player);
-              this.runTurn();
-            } else {
-              this.runDealerTurn();
-            }
+            this.dealCard(this.player);
+            this.runTurn();
           })
           .catch(() => this.runDealerTurn());
       });
   }
 
   runDealerTurn() {
+    console.log('running dealer turn');
     return 'Dealer logic goes here';
   }
 
-  askToHit(player, dealer) {
+  askToHit() {
     return new Promise(function(resolve, reject) {
-      rl.question('Hit or stay? press h / s ', answer => {
+      rl.question('Hit or stay? press (h / s) ', answer => {
         if (answer === 'h') {
           resolve(true);
         } else {
-          reject(false);
+          reject();
         }
-        rl.close();
       });
     });
   }
